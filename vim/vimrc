@@ -19,6 +19,7 @@ colorscheme elflord
 
 set modeline " load per-file vim settings
 autocmd BufWritePre,BufRead *.c,*.conf,*.cpp,*.css,*.erb,*.js,*.json,*.php,*.pp,*.py,*.sh,*.sql :%s/\s\+$//e
+autocmd FileType c,cpp setl tabstop=8 shiftwidth=8 noexpandtab
  
 set incsearch " show the `best match so far'
 set hlsearch  " highlight search
