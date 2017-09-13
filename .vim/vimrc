@@ -1,0 +1,79 @@
+" Use some plugins!
+let g:plug_url_format = 'git@github.com:%s.git'
+call plug#begin('~/.vim/plugged')
+Plug 'vim-airline/vim-airline'
+Plug 'vim-airline/vim-airline-themes'
+call plug#end()
+
+" indentation
+set tabstop=4                  " 1 tab == 4 spaces
+set shiftwidth=4               " 1 indent == 4 spaces
+set shiftround                 " use multiples of 'shiftwidth'
+set expandtab                  " write spaces instead of tabs
+set smartindent                " others are autoindent (dumber) or cindent (smarter)
+filetype plugin indent on      " set indentation automatically for known filetypes
+
+" interface behaviour
+set nocompatible               " welcome to 2017
+set enc=utf-8                  " default encoding
+set backspace=indent,eol,start " made backspace work
+set wildmode=list:full
+set wildmenu
+set laststatus=2               " always show status bar
+set ruler                      " show current position in statusbar
+set number
+set colorcolumn=80             " for those still in 1970s
+syntax on                      " display nice colours
+let g:airline#extensions#tabline#enabled = 1 " always show list of open files
+colorscheme elflord
+
+" Mouse configuration
+set mouse=a
+if has("mouse_sgr")
+    set ttymouse=sgr
+else
+    set ttymouse=xterm2
+end
+
+" searching
+set incsearch " show the `best match so far'
+set hlsearch  " highlight search
+set smartcase " case-insensitive search
+
+
+" per-file and per-filetype settings
+set modeline
+autocmd BufWritePre,BufRead *.c,*.conf,*.cpp,*.css,*.erb,*.js,*.json,*.php,*.pp,*.py,*.sh,*.sql :%s/\s\+$//e
+autocmd FileType python setl shiftwidth=4 sts=4 expandtab
+autocmd FileType sh,make,c,cpp setl shiftwidth=8 tabstop=8 noexpandtab
+autocmd FileType puppet setl colorcolumn=140
+
+" X11 clipboard support
+if has("clipboard")
+    set clipboard=unnamed
+    if has("unnamedplus")
+        set clipboard+=unnamedplus
+    endif
+endif
+
+"Save last position
+if has("autocmd")
+  au BufReadPost * if line("'\"") > 1 && line("'\"") <= line("$") | exe "normal! g'\"" | endif
+endif
+
+" Keep undo history across sessions
+let vimDir = '$HOME/.vim'
+if has('persistent_undo')
+    let &undodir = expand(vimDir . '/undodir')
+    :silent call system('mkdir -p ' . &undodir)
+    set undofile
+    set undolevels=2000
+    set undoreload=10000
+endif
+
+" Let's use buffers!
+" This way one can split screen and see multiple files at once.
+" Unlike with tabs.
+set hidden " Allow changing buffers without saving
+nnoremap <C-k> :bprev<CR>
+nnoremap <C-l> :bnext<CR>
