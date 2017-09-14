@@ -3,9 +3,13 @@ autoload -U colors
 colors
 export PS1=%{$fg[$NCOLOR]%}%B%n%b%{$reset_color%}:%{$fg[blue]%}%B%c/%b%{$reset_color%}
 
-# useful aliases
-alias ls='ls --color=tty'
-alias ll='ls -lh'
+# ls colours
+if [ "x$(uname)" = 'xLinux' ]; then
+    alias ls='ls --color=auto'
+else
+    export LSCOLORS=GxFxCxDxBxegedabagaced
+    alias ls='ls -G'
+fi
 
 # Completion
 autoload -U compinit
