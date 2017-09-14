@@ -30,6 +30,10 @@ setopt inc_append_history       # add commands as they are typed, don't wait unt
 setopt share_history            # share hist between sessions
 bindkey '^R' history-incremental-pattern-search-backward # What's ZSH's default?
 
+# keyboard
+bindkey "${terminfo[khome]}" beginning-of-line
+bindkey "${terminfo[kend]}" end-of-line
+
 # various
 setopt auto_cd                  # if command is a path, cd into it
 setopt auto_remove_slash        # self explicit
