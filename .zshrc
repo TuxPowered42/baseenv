@@ -10,6 +10,7 @@ else
     export LSCOLORS=GxFxCxDxBxegedabagaced
     alias ls='ls -G'
 fi
+alias ll='ls -lh'
 
 # Completion
 autoload -U compinit
