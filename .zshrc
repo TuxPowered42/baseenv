@@ -1,7 +1,7 @@
 # looks and colours
 autoload -U colors
 colors
-export PS1=%{$fg[$NCOLOR]%}%B%n%b%{$reset_color%}:%{$fg[blue]%}%B%c/%b%{$reset_color%}
+export PS1=%{$fg[$NCOLOR]%}%B"[%*] %m"%b%{$reset_color%}" "%{$fg[blue]%}%B%c/%b%{$reset_color%}" # "
 
 # ls colours
 if [ "x$(uname)" = 'xLinux' ]; then
@@ -31,13 +31,15 @@ setopt hist_ignore_all_dups     # no duplicate
 unsetopt hist_ignore_space      # ignore space prefixed commands
 setopt hist_reduce_blanks       # trim blanks
 setopt hist_verify              # show before executing history commands
-setopt inc_append_history       # add commands as they are typed, don't wait until shell exit 
+setopt inc_append_history       # add commands as they are typed, don't wait until shell exit
 setopt share_history            # share hist between sessions
 bindkey '^R' history-incremental-pattern-search-backward # What's ZSH's default?
 
 # keyboard
-bindkey "${terminfo[khome]}" beginning-of-line
-bindkey "${terminfo[kend]}" end-of-line
+bindkey  "^[[1~"   beginning-of-line
+bindkey  "^[[3~"   delete-char
+bindkey  "^[[4~"   end-of-line
+
 
 # various
 setopt auto_cd                  # if command is a path, cd into it
@@ -50,10 +52,9 @@ unsetopt rm_star_silent         # ask for confirmation for `rm *' or `rm path/*'
 export EDITOR=$(which vim)
 export VISUAL=$(which vim)
 
-# SSH socket symlink for nested tmux operaion
-if test -S $SSH_AUTH_SOCK; then
-    if echo "$SSH_AUTH_SOCK" | grep -Eq '/tmp/ssh-[a-zA-Z0-9]+/agent.[0-9]+'; then
-        ln -sf "$SSH_AUTH_SOCK" "/tmp/ssh-agent-$USER-screen"
-        export SSH_AUTH_SOCK="/tmp/ssh-agent-$USER-screen"
-    fi
+SSH_ENV="$HOME/.ssh/environment"
+
+
+if ! pgrep ssh-agent -u $USER > /dev/null; then
+    ssh-agent
 fi
