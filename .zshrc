@@ -1,3 +1,12 @@
+HN=${$(hostname)%%.ig.local}
+if [ -z $TMUX ] && [ "$TERM" = "xterm-256color" ] ; then
+	echo -ne "\033k$HN\033\\"
+	tmux ls && tmux -uCC attach -t iterm || tmux -uCC new -s iterm
+	exit
+else
+	tmux rename-window "$HN"
+fi
+
 # looks and colours
 autoload -U colors
 colors
