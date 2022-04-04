@@ -1,10 +1,23 @@
-HN=${$(hostname)%%.ig.local}
-if [ -z $TMUX ] && [ "$TERM" = "xterm-256color" ] ; then
-	echo -ne "\033k$HN\033\\"
-	tmux ls && tmux -uCC attach -t iterm || tmux -uCC new -s iterm
-	exit
-else
-	tmux rename-window "$HN"
+# PATH
+if [ $(uname) = 'Darwin' ]; then
+  PATH=/opt/homebrew/Cellar/python@3.9/3.9.10/Frameworks/Python.framework/Versions/3.9/bin:$PATH
+  PATH=/opt/homebrew/bin:$PATH
+  PATH=/opt/homebrew/sbin:$PATH
+  PATH=/usr/local/bin:/usr/local/sbin:$PATH # Override BSD commands
+fi
+export GOPATH=$HOME/workspace/go
+PATH=$GOPATH:$PATH
+export PATH
+
+# SSH
+# alias won't work in if…fi
+alias tuxpowered_ssh_add="SSH_AUTH_SOCK=/private/tmp/.ssh-agent-tuxpowered ssh-add"
+if [ $(uname) = 'Darwin' ]; then
+  export SSH_AUTH_SOCK="/opt/homebrew/var/run/yubikey-agent.sock"
+  if ! tuxpowered_ssh_add -l > /dev/null; then
+      tuxpowered_ssh_add ~/.ssh/id_innogames_rsa
+      tuxpowered_ssh_add ~/.ssh/id_tuxpowered_ed25519
+  fi
 fi
 
 # looks and colours
@@ -19,7 +32,6 @@ else
     export LSCOLORS=GxFxCxDxBxegedabagaced
     alias ls='ls -G'
 fi
-alias ll='ls -lh'
 
 # Completion
 autoload -U compinit
@@ -31,24 +43,42 @@ zstyle ':completion:*' menu select=2
 zstyle ':completion:*' list-colors ${(s.:.)LS_COLORS}
 zstyle ':completion:*' matcher-list 'm:{a-zA-Z}={A-Za-z}' '+l:|=* r:|=*' # ignore case and complete in middle of word
 
-# history
-HISTFILE=~/.zsh_history         # where to store history
-HISTSIZE=1000                   # long history
-SAVEHIST=1000                   # long history
-setopt append_history           # append
-setopt hist_ignore_all_dups     # no duplicate
-unsetopt hist_ignore_space      # ignore space prefixed commands
-setopt hist_reduce_blanks       # trim blanks
-setopt hist_verify              # show before executing history commands
-setopt inc_append_history       # add commands as they are typed, don't wait until shell exit
-setopt share_history            # share hist between sessions
-bindkey '^R' history-incremental-pattern-search-backward # What's ZSH's default?
+## History wrapper
+function omz_history {
+  local clear list
+  zparseopts -E c=clear l=list
+
+  if [[ -n "$clear" ]]; then
+    # if -c provided, clobber the history file
+    echo -n >| "$HISTFILE"
+    echo >&2 History file deleted. Reload the session to see its effects.
+  elif [[ -n "$list" ]]; then
+    # if -l provided, run as if calling `fc' directly
+    builtin fc "$@"
+  else
+    # unless a number is provided, show all history events (starting from 1)
+    [[ ${@[-1]-} = *[0-9]* ]] && builtin fc -l "$@" || builtin fc -l "$@" 1
+  fi
+}
+
+## History file configuration
+HISTFILE="$HOME/.zsh_history"
+HISTSIZE=50000
+SAVEHIST=10000
+
+## History command configuration
+setopt extended_history       # record timestamp of command in HISTFILE
+setopt hist_expire_dups_first # delete duplicates first when HISTFILE size exceeds HISTSIZE
+setopt hist_ignore_dups       # ignore duplicated commands history list
+setopt hist_ignore_space      # ignore commands that start with space
+setopt hist_verify            # show command with history expansion to user before running it
+setopt inc_append_history     # add commands to HISTFILE in order of execution
+setopt share_history          # share command history data
 
 # keyboard
 bindkey  "^[[1~"   beginning-of-line
 bindkey  "^[[3~"   delete-char
 bindkey  "^[[4~"   end-of-line
-
 
 # various
 setopt auto_cd                  # if command is a path, cd into it
@@ -61,9 +91,13 @@ unsetopt rm_star_silent         # ask for confirmation for `rm *' or `rm path/*'
 export EDITOR=$(which vim)
 export VISUAL=$(which vim)
 
-SSH_ENV="$HOME/.ssh/environment"
+alias history='omz_history -i'
+alias ll='ls -lh'
+alias ntssh="TERM=xterm ssh"
+alias ssh-zarya="ssh  -D 42669 -A vegeta@zarya.tuxpowered.net"
+alias flush-dns="sudo killall -HUP mDNSResponder"
 
-
-if ! pgrep ssh-agent -u $USER > /dev/null; then
-    ssh-agent
+ZSHRC_LOCAL=~/.zshrc_local
+if [ -f $ZSHRC_LOCAL ]; then
+  . $ZSHRC_LOCAL
 fi
