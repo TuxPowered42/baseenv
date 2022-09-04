@@ -10,15 +10,27 @@ PATH=$GOPATH:$PATH
 export PATH
 
 # SSH
-# alias won't work in if…fi
-alias tuxpowered_ssh_add="SSH_AUTH_SOCK=/private/tmp/.ssh-agent-tuxpowered ssh-add"
 if [ $(uname) = 'Darwin' ]; then
-  export SSH_AUTH_SOCK="/opt/homebrew/var/run/yubikey-agent.sock"
-  if ! tuxpowered_ssh_add -l > /dev/null; then
-      tuxpowered_ssh_add ~/.ssh/id_innogames_rsa
-      tuxpowered_ssh_add ~/.ssh/id_tuxpowered_ed25519
-  fi
+    # On MacOS there are 2 ssh-agents started as system services.
+    # One for private use and the other one for the corporate YubiKey.
+    export SSH_AUTH_SOCK="/opt/homebrew/var/run/yubikey-agent.sock" # The default socket is corporate
+    alias ssh-add_tuxpowered="SSH_AUTH_SOCK=/private/tmp/ssh-agent-tuxpowered ssh-add"
+else
+    # On other systems start the ssh-agent manually
+    export SSH_AUTH_SOCK="/tmp/ssh-agent-tuxpowered"
+    alias ssh-add_tuxpowered="ssh-add"
+    if ! pgrep ssh-agent > /dev/null; then
+        ssh-agent -a $SSH_AUTH_SOCK > /dev/null
+    fi
 fi
+
+setopt extendedglob
+ssh-add_tuxpowered -l > /tmp/added_keys
+for KEY in .ssh/id_tuxpowered^*pub; do
+    if ! grep -q $(cut -d ' ' -f 3 "$KEY.pub") /tmp/added_keys; then
+        ssh-add_tuxpowered $KEY
+    fi
+done
 
 # looks and colours
 autoload -U colors
